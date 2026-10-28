@@ -1,0 +1,6 @@
+bot-panel/
+│
+├── server.js          # File chạy backend Node.js
+├── package.json       # Khai báo thư viện
+└── public/
+    └── index.html     # Giao diện chính (Console, Files, Databases,...)

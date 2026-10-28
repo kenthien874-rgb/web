@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot-Hosting Panel Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #1e1e2f; color: #fff; font-family: system-ui, -apple-system, sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-tab.active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Form Đăng Nhập -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div class="bg-[#27293d] p-8 rounded-xl shadow-2xl w-96 border border-gray-700 mx-4">
+            <h2 class="text-2xl font-bold mb-6 text-center text-blue-400"><i class="fa-solid fa-server"></i> Đăng Nhập Panel</h2>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm mb-2 text-gray-300">Tài khoản Discord (Email)</label>
+                    <input type="email" id="email" required class="w-full px-4 py-2 rounded bg-[#1e1e2f] border border-gray-600 focus:outline-none focus:border-blue-500 text-white" placeholder="giabaotrungki@gmail.com">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm mb-2 text-gray-300">Mật khẩu</label>
+                    <input type="password" id="password" required class="w-full px-4 py-2 rounded bg-[#1e1e2f] border border-gray-600 focus:outline-none focus:border-blue-500 text-white" placeholder="••••••••">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold transition">Đăng Nhập</button>
+                <p id="login-error" class="text-red-500 text-sm mt-3 text-center hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Giao Diện Chính -->
+    <div id="main-app" class="flex-1 flex flex-col hidden">
+        <header class="bg-[#27293d] border-b border-gray-700 px-4 py-3 flex items-center justify-between shadow-md">
+            <div class="flex items-center space-x-4 overflow-x-auto">
+                <span class="text-blue-400 font-bold text-lg"><i class="fa-solid fa-cloud"></i> Hosting.net</span>
+                <nav class="flex space-x-2">
+                    <button onclick="switchTab('console')" class="nav-tab active px-3 py-2 font-medium text-gray-300 hover:text-white transition text-sm">Console</button>
+                    <button onclick="switchTab('files')" class="nav-tab px-3 py-2 font-medium text-gray-300 hover:text-white transition text-sm">Files</button>
+                    <button onclick="switchTab('databases')" class="nav-tab px-3 py-2 font-medium text-gray-300 hover:text-white transition text-sm">Databases</button>
+                    <button onclick="switchTab('users')" class="nav-tab px-3 py-2 font-medium text-gray-300 hover:text-white transition text-sm">Users</button>
+                    <button onclick="switchTab('backups')" class="nav-tab px-3 py-2 font-medium text-gray-300 hover:text-white transition text-sm">Backups</button>
+                </nav>
+            </div>
+            <div>
+                <button onclick="handleLogout()" class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded text-xs font-semibold transition"><i class="fa-solid fa-right-from-bracket"></i> Thoát</button>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 max-w-7xl mx-auto w-full">
+            <!-- TAB: CONSOLE -->
+            <div id="tab-console" class="tab-content active space-y-4">
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="controlBot('start')" class="bg-blue-600 hover:bg-blue-700 py-2.5 rounded-lg font-bold text-sm shadow transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-play"></i> <span>Start</span>
+                    </button>
+                    <button onclick="controlBot('restart')" class="bg-gray-600 hover:bg-gray-700 py-2.5 rounded-lg font-bold text-sm shadow transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-rotate-right"></i> <span>Restart</span>
+                    </button>
+                    <button onclick="controlBot('stop')" class="bg-red-600 hover:bg-red-700 py-2.5 rounded-lg font-bold text-sm shadow transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-stop"></i> <span>Stop</span>
+                    </button>
+                </div>
+
+                <div class="bg-black rounded-lg p-3 h-52 overflow-y-auto font-mono text-xs border border-gray-800 shadow-inner" id="console-logs">
+                    <div class="mb-1 text-gray-400">[System] Panel initialized successfully.</div>
+                    <div class="mb-1 text-gray-400">[System] Waiting for bot startup...</div>
+                </div>
+
+                <div class="relative">
+                    <input type="text" placeholder="> Type a command..." class="w-full bg-[#27293d] border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="bg-[#27293d] p-3 rounded-lg border border-gray-700">
+                        <p class="text-gray-400 text-xs">Address</p>
+                        <p class="text-sm font-semibold mt-0.5">us3.bot-hosting.net:20576</p>
+                    </div>
+                    <div class="bg-[#27293d] p-3 rounded-lg border border-gray-700">
+                        <p class="text-gray-400 text-xs">Uptime</p>
+                        <p class="text-sm font-semibold mt-0.5 text-yellow-500" id="stat-status">Offline</p>
+                    </div>
+                    <div class="bg-[#27293d] p-3 rounded-lg border border-gray-700">
+                        <p class="text-gray-400 text-xs">CPU Load</p>
+                        <p class="text-sm font-semibold mt-0.5" id="stat-cpu">0.00% / 20%</p>
+                    </div>
+                    <div class="bg-[#27293d] p-3 rounded-lg border border-gray-700">
+                        <p class="text-gray-400 text-xs">Memory</p>
+                        <p class="text-sm font-semibold mt-0.5" id="stat-memory">0 Bytes / 256 MiB</p>
+                    </div>
+                    <div class="bg-[#27293d] p-3 rounded-lg border border-gray-700">
+                        <p class="text-gray-400 text-xs">Disk</p>
+                        <p class="text-sm font-semibold mt-0.5">0 Bytes / 1 GiB</p>
+                    </div>
+                    <div class="bg-[#27293d] p-3 rounded-lg border border-gray-700">
+                        <p class="text-gray-400 text-xs">Network (Inbound / Outbound)</p>
+                        <p class="text-sm font-semibold mt-0.5">0 Bytes / 0 Bytes</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Các Tab khác giữ nguyên giao diện -->
+            <div id="tab-files" class="tab-content"><div class="bg-[#27293d] p-4 rounded-lg border border-gray-700 text-sm">Quản lý files bot...</div></div>
+            <div id="tab-databases" class="tab-content"><div class="bg-[#27293d] p-4 rounded-lg border border-gray-700 text-sm">Quản lý databases...</div></div>
+            <div id="tab-users" class="tab-content"><div class="bg-[#27293d] p-4 rounded-lg border border-gray-700 text-sm">Quản lý users: giabaotrungki@gmail.com</div></div>
+            <div id="tab-backups" class="tab-content"><div class="bg-[#27293d] p-4 rounded-lg border border-gray-700 text-sm">Sao lưu dữ liệu...</div></div>
+        </main>
+    </div>
+
+    <script>
+        // Kiểm tra trạng thái đã lưu trong trình duyệt khi vào trang
+        window.onload = function() {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorEl = document.getElementById('login-error');
+
+            // Khớp chính xác thông tin tài khoản của bạn
+            if (email === 'giabaotrungki@gmail.com' && password === 'Tgb@2008') {
+                localStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+            } else {
+                errorEl.textContent = 'Sai tài khoản hoặc mật khẩu!';
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function controlBot(action) {
+            const statusEl = document.getElementById('stat-status');
+            const cpuEl = document.getElementById('stat-cpu');
+            const memEl = document.getElementById('stat-memory');
+            const logsContainer = document.getElementById('console-logs');
+
+            if (action === 'start') {
+                statusEl.textContent = 'Online';
+                statusEl.className = 'text-sm font-semibold mt-0.5 text-green-500';
+                cpuEl.textContent = '4.15% / 20%';
+                memEl.textContent = '45.2 MiB / 256 MiB';
+                logsContainer.innerHTML += `<div class="mb-1 text-green-400">[Bot] Starting application... Started successfully.</div>`;
+            } else if (action === 'stop') {
+                statusEl.textContent = 'Offline';
+                statusEl.className = 'text-sm font-semibold mt-0.5 text-yellow-500';
+                cpuEl.textContent = '0.00% / 20%';
+                memEl.textContent = '0 Bytes / 256 MiB';
+                logsContainer.innerHTML += `<div class="mb-1 text-red-400">[Bot] Process stopped by user.</div>`;
+            } else if (action === 'restart') {
+                statusEl.textContent = 'Restarting';
+                statusEl.className = 'text-sm font-semibold mt-0.5 text-blue-400';
+                logsContainer.innerHTML += `<div class="mb-1 text-blue-300">[Bot] Restarting application...</div>`;
+                setTimeout(() => {
+                    statusEl.textContent = 'Online';
+                    statusEl.className = 'text-sm font-semibold mt-0.5 text-green-500';
+                    cpuEl.textContent = '3.80% / 20%';
+                    memEl.textContent = '42.1 MiB / 256 MiB';
+                    logsContainer.innerHTML += `<div class="mb-1 text-green-400">[Bot] Restart successful.</div>`;
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }, 1500);
+            }
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
